@@ -1,170 +1,62 @@
 package edu.ifma.SI.LPWeb.campeonatoFutebol.services;
 
-import edu.ifma.SI.LPWeb.campeonatoFutebol.DTO.ClassificacaoDTO;
+import edu.ifma.SI.LPWeb.campeonatoFutebol.DTO.CampeonatoDTO;
 import edu.ifma.SI.LPWeb.campeonatoFutebol.exception.CampeonatoNaoEncontradoException;
-import edu.ifma.SI.LPWeb.campeonatoFutebol.exception.PartidaNaoEncontradaException;
 import edu.ifma.SI.LPWeb.campeonatoFutebol.model.Campeonato;
-import edu.ifma.SI.LPWeb.campeonatoFutebol.model.Partida;
-import edu.ifma.SI.LPWeb.campeonatoFutebol.model.Resultado;
-import edu.ifma.SI.LPWeb.campeonatoFutebol.model.Time;
 import edu.ifma.SI.LPWeb.campeonatoFutebol.repository.CampeonatoRepository;
-import edu.ifma.SI.LPWeb.campeonatoFutebol.repository.PartidaRepository;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.List;
 
 @Service
 public class CampeonatoService {
     private final CampeonatoRepository repository;
-    private final PartidaRepository partidaRepository;
+    private final ModelMapper modelMapper;
 
-    public CampeonatoService(CampeonatoRepository repository, PartidaRepository partidaRepository) {
+    public CampeonatoService(CampeonatoRepository repository, ModelMapper modelMapper) {
         this.repository = repository;
-        this.partidaRepository = partidaRepository;
+        this.modelMapper = modelMapper;
     }
 
-    public List<Campeonato> listarTodos() {
-        return repository.findAll();
+    // Lista todos os campeonatos convertidos para DTO
+    public List<CampeonatoDTO> listarTodos() {
+        return repository.findAll().stream()
+                .map(campeonato -> modelMapper.map(campeonato, CampeonatoDTO.class))  // Convertendo Campeonato para CampeonatoDTO
+                .toList();
     }
 
-    public Campeonato buscarPorId(Integer id) {
-        return repository.findById(id)
+    // Buscar campeonato por ID e retornar DTO
+    public CampeonatoDTO buscarPorId(Integer id) {
+        Campeonato campeonato = repository.findById(id)
                 .orElseThrow(() -> new CampeonatoNaoEncontradoException("Campeonato com ID " + id + " não encontrado."));
+        return modelMapper.map(campeonato, CampeonatoDTO.class);  // Convertendo Campeonato para CampeonatoDTO
     }
 
-    public Campeonato salvar(Campeonato campeonato) {
+    // Salvar um novo campeonato a partir de um DTO
+    public Campeonato salvar(CampeonatoDTO campeonatoDTO) {
+        Campeonato campeonato = modelMapper.map(campeonatoDTO, Campeonato.class);  // Convertendo CampeonatoDTO para Campeonato
+        return repository.save(campeonato);  // Salvando no banco de dados
+    }
+
+    // Atualizar um campeonato existente
+    public Campeonato atualizar(Integer id, CampeonatoDTO campeonatoDTO) {
+        // Verificar se o campeonato existe antes de atualizar
+        Campeonato campeonatoExistente = repository.findById(id)
+                .orElseThrow(() -> new CampeonatoNaoEncontradoException("Campeonato com ID " + id + " não encontrado para atualização."));
+
+        // Mapear os dados do DTO para a entidade
+        Campeonato campeonato = modelMapper.map(campeonatoDTO, Campeonato.class);
+        campeonato.setId(id);
+
         return repository.save(campeonato);
     }
 
-    public Campeonato atualizar(Campeonato campeonato) {
-        if (campeonato.getId() == null || !repository.existsById(campeonato.getId())) {
-            throw new CampeonatoNaoEncontradoException("Campeonato com ID " + campeonato.getId() + " não encontrado para atualização.");
-        }
-        return repository.save(campeonato);
-    }
-
+    // Deletar um campeonato
     public void deletar(Integer id) {
         if (!repository.existsById(id)) {
             throw new CampeonatoNaoEncontradoException("Campeonato com ID " + id + " não encontrado para exclusão.");
         }
-        repository.deleteById(id);
-    }
-
-    public Set<Time> listarTimesDoCampeonato(Integer campeonatoId) {
-        List<Partida> partidas = partidaRepository.findByCampeonatoId(campeonatoId);
-        if (partidas.isEmpty()) {
-            throw new PartidaNaoEncontradaException("Nenhuma partida encontrada para o campeonato com ID " + campeonatoId);
-        }
-
-        return partidas.stream()
-                .flatMap(p -> Stream.of(p.getTimeMandante(), p.getTimeVisitante()))
-                .collect(Collectors.toSet());
-    }
-
-    public List<Partida> listarPartidasPassadas(Integer campeonatoId) {
-        List<Partida> partidas = partidaRepository.findByCampeonatoId(campeonatoId);
-        if (partidas.isEmpty()) {
-            throw new PartidaNaoEncontradaException("Nenhuma partida encontrada para o campeonato com ID " + campeonatoId);
-        }
-
-        return partidas.stream()
-                .filter(p -> p.getData().isBefore(LocalDate.now()))
-                .collect(Collectors.toList());
-    }
-
-    public List<Partida> listarPartidasFuturas(Integer campeonatoId) {
-        List<Partida> partidas = partidaRepository.findByCampeonatoId(campeonatoId);
-        if (partidas.isEmpty()) {
-            throw new PartidaNaoEncontradaException("Nenhuma partida encontrada para o campeonato com ID " + campeonatoId);
-        }
-
-        return partidas.stream()
-                .filter(p -> p.getData().isAfter(LocalDate.now()))
-                .collect(Collectors.toList());
-    }
-
-    public List<ClassificacaoDTO> listarClassificacao(Integer campeonatoId) {
-        List<Partida> partidas = partidaRepository.findByCampeonatoId(campeonatoId);
-        if (partidas.isEmpty()) {
-            throw new PartidaNaoEncontradaException("Nenhuma partida encontrada para o campeonato com ID " + campeonatoId);
-        }
-
-        Map<Time, Estatisticas> mapa = new HashMap<>();
-
-        for (Partida partida : partidas) {
-            Time mandante = partida.getTimeMandante();
-            Time visitante = partida.getTimeVisitante();
-            Resultado resultado = partida.getResultado();
-
-            if (resultado == null) continue;
-
-            mapa.putIfAbsent(mandante, new Estatisticas(mandante.getNome()));
-            mapa.putIfAbsent(visitante, new Estatisticas(visitante.getNome()));
-
-            Estatisticas cMandante = mapa.get(mandante);
-            Estatisticas cVisitante = mapa.get(visitante);
-
-            int golsMandante = resultado.getNumGolsMandante();
-            int golsVisitante = resultado.getNumGolsVisitante();
-
-            cMandante.registrarPartida(golsMandante, golsVisitante);
-            cVisitante.registrarPartida(golsVisitante, golsMandante);
-        }
-
-        return mapa.values().stream()
-                .map(Estatisticas::toDTO)
-                .sorted(Comparator
-                        .comparingInt(ClassificacaoDTO::pontos).reversed()
-                        .thenComparingInt(ClassificacaoDTO::vitorias).reversed()
-                        .thenComparingInt(ClassificacaoDTO::saldoGols).reversed())
-                .collect(Collectors.toList());
-    }
-
-    private static class Estatisticas {
-        private final String nomeTime;
-        private int jogos = 0;
-        private int vitorias = 0;
-        private int empates = 0;
-        private int derrotas = 0;
-        private int golsPro = 0;
-        private int golsContra = 0;
-        private int pontos = 0;
-
-        public Estatisticas(String nomeTime) {
-            this.nomeTime = nomeTime;
-        }
-
-        public void registrarPartida(int golsFeitos, int golsSofridos) {
-            this.jogos++;
-            this.golsPro += golsFeitos;
-            this.golsContra += golsSofridos;
-
-            if (golsFeitos > golsSofridos) {
-                this.vitorias++;
-                this.pontos += 3;
-            } else if (golsFeitos == golsSofridos) {
-                this.empates++;
-                this.pontos += 1;
-            } else {
-                this.derrotas++;
-            }
-        }
-
-        public ClassificacaoDTO toDTO() {
-            return new ClassificacaoDTO(
-                    nomeTime,
-                    jogos,
-                    vitorias,
-                    empates,
-                    derrotas,
-                    golsPro,
-                    golsContra,
-                    pontos,
-                    golsPro - golsContra
-            );
-        }
+        repository.deleteById(id);  // Deletando o campeonato
     }
 }
