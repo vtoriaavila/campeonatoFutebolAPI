@@ -8,6 +8,7 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "partida")
 public class Partida {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
