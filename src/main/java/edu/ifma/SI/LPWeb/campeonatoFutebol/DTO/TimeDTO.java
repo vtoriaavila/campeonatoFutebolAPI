@@ -5,11 +5,6 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public class TimeDTO {
-    private Integer id;
-    private String nome;
+public record TimeDTO(Integer id, String nome){
+
 }
