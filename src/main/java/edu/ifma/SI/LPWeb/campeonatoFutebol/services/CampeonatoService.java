@@ -64,7 +64,7 @@ public class CampeonatoService {
     }
 
     public List<ClassificacaoDTO> listarClassificacao(Integer campeonatoId) {
-        Map<Time, ClassificacaoDTO> mapa = new HashMap<>();
+        Map<Time, Estatisticas> mapa = new HashMap<>();
 
         List<Partida> partidas = partidaRepository.findByCampeonatoId(campeonatoId);
 
@@ -75,29 +75,71 @@ public class CampeonatoService {
 
             if (resultado == null) continue;
 
-            mapa.putIfAbsent(mandante, new ClassificacaoDTO(mandante.getNome()));
-            mapa.putIfAbsent(visitante, new ClassificacaoDTO(visitante.getNome()));
+            mapa.putIfAbsent(mandante, new Estatisticas(mandante.getNome()));
+            mapa.putIfAbsent(visitante, new Estatisticas(visitante.getNome()));
 
-            ClassificacaoDTO cMandante = mapa.get(mandante);
-            ClassificacaoDTO cVisitante = mapa.get(visitante);
+            Estatisticas cMandante = mapa.get(mandante);
+            Estatisticas cVisitante = mapa.get(visitante);
 
             int golsMandante = resultado.getNumGolsMandante();
             int golsVisitante = resultado.getNumGolsVisitante();
 
-            cMandante.addGols(golsMandante, golsVisitante);
-            cVisitante.addGols(golsVisitante, golsMandante);
-
-            if (golsMandante > golsVisitante) {
-                cMandante.addVitoria();
-            } else if (golsVisitante > golsMandante) {
-                cVisitante.addVitoria();
-            }
+            cMandante.registrarPartida(golsMandante, golsVisitante);
+            cVisitante.registrarPartida(golsVisitante, golsMandante);
         }
 
         return mapa.values().stream()
-                .sorted(Comparator.comparingInt(ClassificacaoDTO::getVitorias).reversed()
-                        .thenComparingInt(ClassificacaoDTO::getSaldoGols).reversed())
+                .map(Estatisticas::toDTO)
+                .sorted(Comparator
+                        .comparingInt(ClassificacaoDTO::pontos).reversed()
+                        .thenComparingInt(ClassificacaoDTO::vitorias).reversed()
+                        .thenComparingInt(ClassificacaoDTO::saldoGols).reversed())
                 .collect(Collectors.toList());
+    }
+
+    private static class Estatisticas {
+        private final String nomeTime;
+        private int jogos = 0;
+        private int vitorias = 0;
+        private int empates = 0;
+        private int derrotas = 0;
+        private int golsPro = 0;
+        private int golsContra = 0;
+        private int pontos = 0;
+
+        public Estatisticas(String nomeTime) {
+            this.nomeTime = nomeTime;
+        }
+
+        public void registrarPartida(int golsFeitos, int golsSofridos) {
+            this.jogos++;
+            this.golsPro += golsFeitos;
+            this.golsContra += golsSofridos;
+
+            if (golsFeitos > golsSofridos) {
+                this.vitorias++;
+                this.pontos += 3;
+            } else if (golsFeitos == golsSofridos) {
+                this.empates++;
+                this.pontos += 1;
+            } else {
+                this.derrotas++;
+            }
+        }
+
+        public ClassificacaoDTO toDTO() {
+            return new ClassificacaoDTO(
+                    nomeTime,
+                    jogos,
+                    vitorias,
+                    empates,
+                    derrotas,
+                    golsPro,
+                    golsContra,
+                    pontos,
+                    golsPro - golsContra // saldo de gols
+            );
+        }
     }
 }
 
