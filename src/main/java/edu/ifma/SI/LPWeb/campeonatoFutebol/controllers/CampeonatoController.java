@@ -58,4 +58,6 @@ public class CampeonatoController {
     public List<Partida> listarPartidasFuturas(@PathVariable Integer id) {
         return service.listarPartidasFuturas(id);
     }
+
+
 }
