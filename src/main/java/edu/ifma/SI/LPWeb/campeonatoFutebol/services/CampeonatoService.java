@@ -7,6 +7,7 @@ import edu.ifma.SI.LPWeb.campeonatoFutebol.repository.CampeonatoRepository;
 import edu.ifma.SI.LPWeb.campeonatoFutebol.repository.PartidaRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -48,6 +49,18 @@ public class CampeonatoService {
         return partidas.stream()
                 .flatMap(p -> Stream.of(p.getTimeMandante(), p.getTimeVisitante()))
                 .collect(Collectors.toSet());
+    }
+
+    public List<Partida> listarPartidasPassadas(Integer campeonatoId) {
+        return partidaRepository.findByCampeonatoId(campeonatoId).stream()
+                .filter(p -> p.getData().isBefore(LocalDate.now()))
+                .collect(Collectors.toList());
+    }
+
+    public List<Partida> listarPartidasFuturas(Integer campeonatoId) {
+        return partidaRepository.findByCampeonatoId(campeonatoId).stream()
+                .filter(p -> p.getData().isAfter(LocalDate.now()))
+                .collect(Collectors.toList());
     }
 }
 

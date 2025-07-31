@@ -2,6 +2,7 @@ package edu.ifma.SI.LPWeb.campeonatoFutebol.controllers;
 
 
 import edu.ifma.SI.LPWeb.campeonatoFutebol.model.Campeonato;
+import edu.ifma.SI.LPWeb.campeonatoFutebol.model.Partida;
 import edu.ifma.SI.LPWeb.campeonatoFutebol.model.Time;
 import edu.ifma.SI.LPWeb.campeonatoFutebol.services.CampeonatoService;
 import org.springframework.web.bind.annotation.*;
@@ -46,5 +47,15 @@ public class CampeonatoController {
     @GetMapping("/{id}/times")
     public Set<Time> listarTimesDoCampeonato(@PathVariable Integer id) {
         return service.listarTimesDoCampeonato(id);
+    }
+
+    @GetMapping("/{id}/partidas/passadas")
+    public List<Partida> listarPartidasPassadas(@PathVariable Integer id) {
+        return service.listarPartidasPassadas(id);
+    }
+
+    @GetMapping("/{id}/partidas/futuras")
+    public List<Partida> listarPartidasFuturas(@PathVariable Integer id) {
+        return service.listarPartidasFuturas(id);
     }
 }
