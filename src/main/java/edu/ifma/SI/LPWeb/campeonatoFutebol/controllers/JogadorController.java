@@ -1,7 +1,8 @@
 package edu.ifma.SI.LPWeb.campeonatoFutebol.controllers;
 
+import edu.ifma.SI.LPWeb.campeonatoFutebol.DTO.JogadorDTO;
 import edu.ifma.SI.LPWeb.campeonatoFutebol.exception.IdadeInvalidaException;
-import edu.ifma.SI.LPWeb.campeonatoFutebol.model.Jogador;
+import edu.ifma.SI.LPWeb.campeonatoFutebol.exception.JogadorNaoEncontradoException;
 import edu.ifma.SI.LPWeb.campeonatoFutebol.services.JogadorService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,39 +22,60 @@ public class JogadorController {
         this.service = service;
     }
 
+    // Listar todos os jogadores
     @GetMapping
-    public List<Jogador> listarTodos() {
-        return service.listarTodos();
+    public ResponseEntity<List<JogadorDTO>> listarTodos() {
+        return ResponseEntity.ok(service.listarTodos());
     }
 
+    // Listar jogadores com paginação
     @GetMapping("/paginado")
-    public Page<Jogador> listarPaginado(Pageable pageable) {
-        return service.listarPaginado(pageable);
+    public ResponseEntity<Page<JogadorDTO>> listarPaginado(Pageable pageable) {
+        return ResponseEntity.ok(service.listarPaginado(pageable));
     }
 
+    // Buscar jogador por ID
     @GetMapping("/{id}")
-    public Jogador buscarPorId(@PathVariable Integer id) {
-        return service.buscarPorId(id).orElse(null);
+    public ResponseEntity<JogadorDTO> buscarPorId(@PathVariable Integer id) {
+        return ResponseEntity.ok(service.buscarPorId(id));
     }
 
+    // Salvar novo jogador
     @PostMapping
-    public Jogador salvar(@RequestBody Jogador jogador) {
-        return service.salvar(jogador);
+    public ResponseEntity<?> salvar(@RequestBody JogadorDTO jogadorDTO) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(service.salvar(jogadorDTO));
+        } catch (IdadeInvalidaException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
     }
 
+    // Atualizar jogador existente
     @PutMapping("/{id}")
-    public Jogador atualizar(@PathVariable Integer id, @RequestBody Jogador jogador) {
-        jogador.setId(id);
-        return service.atualizar(jogador);
+    public ResponseEntity<?> atualizar(@PathVariable Integer id, @RequestBody JogadorDTO jogadorDTO) {
+        try {
+            return ResponseEntity.ok(service.atualizar(id, jogadorDTO));
+        } catch (JogadorNaoEncontradoException | IdadeInvalidaException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        }
     }
 
+    // Deletar jogador
     @DeleteMapping("/{id}")
-    public void deletar(@PathVariable Integer id) {
+    public ResponseEntity<Void> deletar(@PathVariable Integer id) {
         service.deletar(id);
+        return ResponseEntity.noContent().build();
     }
 
+    // Trata exceções de idade inválida
     @ExceptionHandler(IdadeInvalidaException.class)
     public ResponseEntity<String> handleIdadeInvalida(IdadeInvalidaException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    // Trata exceções de jogador não encontrado
+    @ExceptionHandler(JogadorNaoEncontradoException.class)
+    public ResponseEntity<String> handleJogadorNaoEncontrado(JogadorNaoEncontradoException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 }
