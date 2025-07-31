@@ -1,9 +1,9 @@
 package edu.ifma.SI.LPWeb.campeonatoFutebol.controllers;
 
-
-import edu.ifma.SI.LPWeb.campeonatoFutebol.model.Partida;
+import edu.ifma.SI.LPWeb.campeonatoFutebol.DTO.PartidaDTO;
 import edu.ifma.SI.LPWeb.campeonatoFutebol.services.PartidaService;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -16,43 +16,42 @@ public class PartidaController {
     }
 
     @GetMapping
-    public List<Partida> listarTodos() {
-        return service.listarTodos();
+    public List<PartidaDTO> listarTodos() {
+        return service.listarTodos();  // O serviço já retorna os DTOs
     }
 
     @GetMapping("/{id}")
-    public Partida buscarPorId(@PathVariable Integer id) {
-        return service.buscarPorId(id).orElseThrow();
+    public PartidaDTO buscarPorId(@PathVariable Integer id) {
+        return service.buscarPorId(id);  // O serviço já retorna o DTO
     }
 
     @GetMapping("/passadas")
-    public List<Partida> partidasPassadas() {
-        return service.partidasPassadas();
+    public List<PartidaDTO> partidasPassadas() {
+        return service.partidasPassadas();  // O serviço já retorna os DTOs
     }
 
     @GetMapping("/futuras")
-    public List<Partida> partidasFuturas() {
-        return service.partidasFuturas();
+    public List<PartidaDTO> partidasFuturas() {
+        return service.partidasFuturas();  // O serviço já retorna os DTOs
     }
 
     @GetMapping("/campeonato/{id}")
-    public List<Partida> partidasPorCampeonato(@PathVariable Integer id) {
-        return service.partidasPorCampeonato(id);
+    public List<PartidaDTO> partidasPorCampeonato(@PathVariable Integer id) {
+        return service.partidasPorCampeonato(id);  // O serviço já retorna os DTOs
     }
 
     @PostMapping
-    public Partida salvar(@RequestBody Partida partida) {
-        return service.salvar(partida);
+    public PartidaDTO salvar(@RequestBody PartidaDTO partidaDTO) {
+        return service.salvar(partidaDTO);  // O serviço converte o DTO para entidade e salva
     }
 
     @PutMapping("/{id}")
-    public Partida atualizar(@PathVariable Integer id, @RequestBody Partida partida) {
-        partida.setId(id);
-        return service.atualizar(partida);
+    public PartidaDTO atualizar(@PathVariable Integer id, @RequestBody PartidaDTO partidaDTO) {
+        return service.atualizar(id, partidaDTO);  // O serviço converte o DTO para entidade e atualiza
     }
 
     @DeleteMapping("/{id}")
     public void deletar(@PathVariable Integer id) {
-        service.deletar(id);
+        service.deletar(id);  // Deleta diretamente no serviço
     }
 }
