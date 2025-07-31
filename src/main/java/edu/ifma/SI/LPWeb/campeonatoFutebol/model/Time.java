@@ -8,6 +8,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "time")
 public class Time {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;

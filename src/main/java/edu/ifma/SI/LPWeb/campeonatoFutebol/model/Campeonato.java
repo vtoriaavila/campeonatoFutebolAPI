@@ -8,6 +8,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "campeonato")
 public class Campeonato {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
