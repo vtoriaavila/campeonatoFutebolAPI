@@ -1,6 +1,8 @@
 package edu.ifma.SI.LPWeb.campeonatoFutebol.services;
 
 import edu.ifma.SI.LPWeb.campeonatoFutebol.DTO.ClassificacaoDTO;
+import edu.ifma.SI.LPWeb.campeonatoFutebol.exception.CampeonatoNaoEncontradoException;
+import edu.ifma.SI.LPWeb.campeonatoFutebol.exception.PartidaNaoEncontradaException;
 import edu.ifma.SI.LPWeb.campeonatoFutebol.model.Campeonato;
 import edu.ifma.SI.LPWeb.campeonatoFutebol.model.Partida;
 import edu.ifma.SI.LPWeb.campeonatoFutebol.model.Resultado;
@@ -17,7 +19,7 @@ import java.util.stream.Stream;
 @Service
 public class CampeonatoService {
     private final CampeonatoRepository repository;
-    private PartidaRepository partidaRepository;
+    private final PartidaRepository partidaRepository;
 
     public CampeonatoService(CampeonatoRepository repository, PartidaRepository partidaRepository) {
         this.repository = repository;
@@ -28,8 +30,9 @@ public class CampeonatoService {
         return repository.findAll();
     }
 
-    public Optional<Campeonato> buscarPorId(Integer id) {
-        return repository.findById(id);
+    public Campeonato buscarPorId(Integer id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new CampeonatoNaoEncontradoException("Campeonato com ID " + id + " não encontrado."));
     }
 
     public Campeonato salvar(Campeonato campeonato) {
@@ -37,36 +40,59 @@ public class CampeonatoService {
     }
 
     public Campeonato atualizar(Campeonato campeonato) {
+        if (campeonato.getId() == null || !repository.existsById(campeonato.getId())) {
+            throw new CampeonatoNaoEncontradoException("Campeonato com ID " + campeonato.getId() + " não encontrado para atualização.");
+        }
         return repository.save(campeonato);
     }
 
     public void deletar(Integer id) {
+        if (!repository.existsById(id)) {
+            throw new CampeonatoNaoEncontradoException("Campeonato com ID " + id + " não encontrado para exclusão.");
+        }
         repository.deleteById(id);
     }
 
     public Set<Time> listarTimesDoCampeonato(Integer campeonatoId) {
         List<Partida> partidas = partidaRepository.findByCampeonatoId(campeonatoId);
+        if (partidas.isEmpty()) {
+            throw new PartidaNaoEncontradaException("Nenhuma partida encontrada para o campeonato com ID " + campeonatoId);
+        }
+
         return partidas.stream()
                 .flatMap(p -> Stream.of(p.getTimeMandante(), p.getTimeVisitante()))
                 .collect(Collectors.toSet());
     }
 
     public List<Partida> listarPartidasPassadas(Integer campeonatoId) {
-        return partidaRepository.findByCampeonatoId(campeonatoId).stream()
+        List<Partida> partidas = partidaRepository.findByCampeonatoId(campeonatoId);
+        if (partidas.isEmpty()) {
+            throw new PartidaNaoEncontradaException("Nenhuma partida encontrada para o campeonato com ID " + campeonatoId);
+        }
+
+        return partidas.stream()
                 .filter(p -> p.getData().isBefore(LocalDate.now()))
                 .collect(Collectors.toList());
     }
 
     public List<Partida> listarPartidasFuturas(Integer campeonatoId) {
-        return partidaRepository.findByCampeonatoId(campeonatoId).stream()
+        List<Partida> partidas = partidaRepository.findByCampeonatoId(campeonatoId);
+        if (partidas.isEmpty()) {
+            throw new PartidaNaoEncontradaException("Nenhuma partida encontrada para o campeonato com ID " + campeonatoId);
+        }
+
+        return partidas.stream()
                 .filter(p -> p.getData().isAfter(LocalDate.now()))
                 .collect(Collectors.toList());
     }
 
     public List<ClassificacaoDTO> listarClassificacao(Integer campeonatoId) {
-        Map<Time, Estatisticas> mapa = new HashMap<>();
-
         List<Partida> partidas = partidaRepository.findByCampeonatoId(campeonatoId);
+        if (partidas.isEmpty()) {
+            throw new PartidaNaoEncontradaException("Nenhuma partida encontrada para o campeonato com ID " + campeonatoId);
+        }
+
+        Map<Time, Estatisticas> mapa = new HashMap<>();
 
         for (Partida partida : partidas) {
             Time mandante = partida.getTimeMandante();
@@ -137,9 +163,8 @@ public class CampeonatoService {
                     golsPro,
                     golsContra,
                     pontos,
-                    golsPro - golsContra // saldo de gols
+                    golsPro - golsContra
             );
         }
     }
 }
-
