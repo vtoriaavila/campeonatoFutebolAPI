@@ -21,6 +21,10 @@ public class ClassificacaoDTO implements Comparable<ClassificacaoDTO> {
     private int golsContra;
     private int pontos;
 
+    public ClassificacaoDTO(String nomeTime) {
+        this.nomeTime = nomeTime;
+    }
+
     public int getSaldoGols() {
         return golsPro - golsContra;
     }
@@ -38,4 +42,23 @@ public class ClassificacaoDTO implements Comparable<ClassificacaoDTO> {
         // Terceiro critério: saldo de gols
         return Integer.compare(outro.getSaldoGols(), this.getSaldoGols());
     }
+
+    public void addGols(int golsPro, int golsContra) {
+        this.golsPro += golsPro;
+        this.golsContra += golsContra;
+        this.jogos++;
+
+        if (golsPro == golsContra) {
+            this.empates++;
+            this.pontos += 1;
+        } else if (golsPro < golsContra) {
+            this.derrotas++;
+        }
+    }
+
+    public void addVitoria() {
+        this.vitorias++;
+        this.pontos += 3;
+    }
+
 }
