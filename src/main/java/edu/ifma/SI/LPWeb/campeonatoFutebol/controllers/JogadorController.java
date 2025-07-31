@@ -1,16 +1,20 @@
 package edu.ifma.SI.LPWeb.campeonatoFutebol.controllers;
 
-
+import edu.ifma.SI.LPWeb.campeonatoFutebol.exception.IdadeInvalidaException;
 import edu.ifma.SI.LPWeb.campeonatoFutebol.model.Jogador;
 import edu.ifma.SI.LPWeb.campeonatoFutebol.services.JogadorService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
 @RequestMapping("/jogadores")
 public class JogadorController {
+
     private final JogadorService service;
 
     public JogadorController(JogadorService service) {
@@ -29,7 +33,7 @@ public class JogadorController {
 
     @GetMapping("/{id}")
     public Jogador buscarPorId(@PathVariable Integer id) {
-        return service.buscarPorId(id).orElseThrow();
+        return service.buscarPorId(id).orElse(null);
     }
 
     @PostMapping
@@ -46,5 +50,10 @@ public class JogadorController {
     @DeleteMapping("/{id}")
     public void deletar(@PathVariable Integer id) {
         service.deletar(id);
+    }
+
+    @ExceptionHandler(IdadeInvalidaException.class)
+    public ResponseEntity<String> handleIdadeInvalida(IdadeInvalidaException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 }
