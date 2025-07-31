@@ -1,10 +1,15 @@
 package edu.ifma.SI.LPWeb.campeonatoFutebol.DTO;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-public record TimeDTO(Integer id, String nome){
-
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class TimeDTO {
+    private Integer id;
+    private String nome;
 }

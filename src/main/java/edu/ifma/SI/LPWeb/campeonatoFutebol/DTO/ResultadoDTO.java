@@ -1,7 +1,16 @@
 package edu.ifma.SI.LPWeb.campeonatoFutebol.DTO;
 
-public record ResultadoDTO(Integer id,
-        int numGolsMandante,
-        int numGolsVisitante) {
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ResultadoDTO {
+    private Integer id;
+    private int numGolsMandante;
+    private int numGolsVisitante;
 }

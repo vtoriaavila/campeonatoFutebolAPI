@@ -1,13 +1,22 @@
 package edu.ifma.SI.LPWeb.campeonatoFutebol.DTO;
 
-public record ClassificacaoDTO(
-        String nomeTime,
-        int jogos,
-        int vitorias,
-        int empates,
-        int derrotas,
-        int golsPro,
-        int golsContra,
-        int pontos,
-        int saldoGols
-) {}
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ClassificacaoDTO {
+    private String nomeTime;
+    private int jogos;
+    private int vitorias;
+    private int empates;
+    private int derrotas;
+    private int golsPro;
+    private int golsContra;
+    private int pontos;
+    private int saldoGols;
+}

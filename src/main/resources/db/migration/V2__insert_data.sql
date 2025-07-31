@@ -22,6 +22,6 @@ INSERT INTO resultado (id, num_gols_mandante, num_gols_visitante) VALUES (2, 0, 
 
 -- Partidas
 INSERT INTO partida (id, data, time_mandante_id, time_visitante_id, campeonato_id, resultado_id) VALUES
-  (1, CURRENT_DATE - INTERVAL '10 days', 1, 2, 1, 1),
-  (2, CURRENT_DATE - INTERVAL '5 days', 2, 1, 1, 2),
-  (3, CURRENT_DATE + INTERVAL '5 days', 1, 2, 1, NULL);
+  (1, DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), 1, 2, 1, 1),
+  (2, DATE_SUB(CURRENT_DATE, INTERVAL 5 DAY), 2, 1, 1, 2),
+  (3, DATE_ADD(CURRENT_DATE, INTERVAL 5 DAY), 1, 2, 1, NULL);
